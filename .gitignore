@@ -1,5 +1,13 @@
 # Created by https://www.gitignore.io/api/go
 
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+.DS_Store
+
 ### Go ###
 # Binaries for programs and plugins
 *.exe

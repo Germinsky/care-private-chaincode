@@ -1,29 +1,26 @@
-package impl
+package main
 
 import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"fmt"
 	"encoding/json"
 	"errors"
-
-	careproto "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol/proto"
-	careprotocol "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol"
 )
 
-type SchedulerDefault struct {
+type Scheduler struct {
 	logger *shim.ChaincodeLogger
 }
 
-func NewSchedulerDefault() careprotocol.Scheduler {
+func NewSchedulerDefault() Scheduler {
 	var logger = shim.NewLogger("scheduler_default")
-	return SchedulerDefault{logger}
+	return Scheduler{logger}
 }
 
-func (s SchedulerDefault) ConstructScheduleKey(ownerId string) string {
+func (s Scheduler) ConstructScheduleKey(ownerId string) string {
 	return "schedule:ownerId:" + ownerId
 }
 
-func (s SchedulerDefault) GetByOwnerId(stub shim.ChaincodeStubInterface, ownerId string) (*careproto.Schedule, error) {
+func (s Scheduler) GetByOwnerId(stub shim.ChaincodeStubInterface, ownerId string) (*Schedule, error) {
 	scheduleId := s.ConstructScheduleKey(ownerId)
 	scheduleBytes, err := stub.GetState(scheduleId)
 
@@ -31,7 +28,7 @@ func (s SchedulerDefault) GetByOwnerId(stub shim.ChaincodeStubInterface, ownerId
 		return nil, err
 	}
 
-	var schedule careproto.Schedule
+	var schedule Schedule
 	if scheduleBytes == nil {
 		return nil, errors.New(fmt.Sprintf("Schedule with key '%v' not found", scheduleId))
 	} else {
@@ -42,7 +39,7 @@ func (s SchedulerDefault) GetByOwnerId(stub shim.ChaincodeStubInterface, ownerId
 	return &schedule, nil
 }
 
-func (s SchedulerDefault) Save(stub shim.ChaincodeStubInterface, schedule careproto.Schedule) (*careproto.Schedule, error) {
+func (s Scheduler) Save(stub shim.ChaincodeStubInterface, schedule Schedule) (*Schedule, error) {
 	scheduleKey := s.ConstructScheduleKey(schedule.OwnerId)
 
 	scheduleBytes, err := stub.GetState(scheduleKey)

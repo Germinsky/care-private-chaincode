@@ -1,29 +1,25 @@
-package impl
+package main
 
 import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/golang/protobuf/proto"
 	"encoding/json"
-
-	careproto "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol/proto"
-	careprotocol "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol"
-
 )
 
-type PatientServiceDefault struct {
+type PatientService struct {
 	logger *shim.ChaincodeLogger
 }
 
-func NewPatientService() careprotocol.PatientService {
+func NewPatientService() PatientService {
 	var logger = shim.NewLogger("patient_service")
-	return &PatientServiceDefault{logger}
+	return PatientService{logger}
 }
 
 
-func (t *PatientServiceDefault) DecodeProtoByteString(encodedPatientByteString string) (*careproto.Patient, error) {
+func (t *PatientService) DecodeProtoByteString(encodedPatientByteString string) (*Patient, error) {
 	var err error
 
-	patient := careproto.Patient{}
+	patient := Patient{}
 	err = proto.Unmarshal([]byte(encodedPatientByteString), &patient)
 	if err != nil {
 		t.logger.Errorf("Error while unmarshalling Patient: %v", err.Error())
@@ -32,7 +28,7 @@ func (t *PatientServiceDefault) DecodeProtoByteString(encodedPatientByteString s
 	return &patient, err
 }
 
-func (t *PatientServiceDefault) SavePatient(stub shim.ChaincodeStubInterface, patient careproto.Patient) (*careproto.Patient, error) {
+func (t *PatientService) SavePatient(stub shim.ChaincodeStubInterface, patient Patient) (*Patient, error) {
 	t.logger.Infof("Saving patient %v", patient)
 
 	jsonUser, err := json.Marshal(&patient)
@@ -48,7 +44,7 @@ func (t *PatientServiceDefault) SavePatient(stub shim.ChaincodeStubInterface, pa
 	return &patient, nil
 }
 
-func (t *PatientServiceDefault) GetPatientById(stub shim.ChaincodeStubInterface, patientId string) (*careproto.Patient, error) {
+func (t *PatientService) GetPatientById(stub shim.ChaincodeStubInterface, patientId string) (*Patient, error) {
 
 	patientKey := "patient:" + patientId
 	patientBytes, err := stub.GetState(patientKey)
@@ -59,7 +55,7 @@ func (t *PatientServiceDefault) GetPatientById(stub shim.ChaincodeStubInterface,
 
 	t.logger.Infof("Getting patient %v \n", string(patientBytes))
 
-	var patient careproto.Patient
+	var patient Patient
 	json.Unmarshal(patientBytes, &patient)
 	return &patient, nil
 }

@@ -3,12 +3,6 @@ package main
 import (
 	"crypto/x509"
 	"encoding/pem"
-
-	careprotocol "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol"
-	caresdk "bitbucket.org/ntarasenko/solvecare-chaincode/sdk"
-	careproto "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol/proto"
-	careimpl "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol/impl"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/golang/protobuf/proto"
 
@@ -19,42 +13,42 @@ import (
 var logger = shim.NewLogger("schedule_chaincode")
 
 type ScheduleChaincode struct {
-	scheduler careprotocol.Scheduler
-	doctorService careprotocol.DoctorService
-	patientService careprotocol.PatientService
+	scheduler Scheduler
+	doctorService DoctorService
+	patientService PatientService
 
-	scheduleService careprotocol.ScheduleService
+	scheduleService ScheduleService
 
-	dispatcher caresdk.Dispatcher
+	dispatcher Dispatcher
 }
 
 func (s *ScheduleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	s.scheduler = careimpl.NewSchedulerDefault()
+	s.scheduler = NewSchedulerDefault()
 	logger.Infof("Created Scheduler: %v", s.scheduler)
 
-	s.doctorService = careimpl.NewDoctorService()
+	s.doctorService = NewDoctorService()
 	logger.Infof("Created DoctorService: %v", s.doctorService)
 
-	s.patientService = careimpl.NewPatientService()
+	s.patientService = NewPatientService()
 	logger.Infof("Created PatientService: %v", s.patientService)
 
-	s.scheduleService = careimpl.NewScheduleService(s.scheduler)
+	s.scheduleService = NewScheduleService(s.scheduler)
 	logger.Infof("Created ScheduleService: %v", s.scheduleService)
 
-	s.dispatcher = caresdk.NewDispatcher()
+	s.dispatcher = NewDispatcher()
 
-	s.dispatcher.AddMapping(careproto.PatientFunctions_PATIENT_GET_BY_ID.String(), s.getPatientById)
-	s.dispatcher.AddMapping(careproto.PatientFunctions_PATIENT_CREATE.String(), s.createPatient)
+	s.dispatcher.AddMapping(PatientFunctions_PATIENT_GET_BY_ID.String(), s.getPatientById)
+	s.dispatcher.AddMapping(PatientFunctions_PATIENT_CREATE.String(), s.createPatient)
 
-	s.dispatcher.AddMapping(careproto.DoctorFunctions_DOCTOR_CREATE.String(), s.createDoctor)
-	s.dispatcher.AddMapping(careproto.DoctorFunctions_DOCTOR_GET_BY_ID.String(), s.getDoctorById)
-	s.dispatcher.AddMapping(careproto.DoctorFunctions_DOCTOR_GET_ALL.String(), s.getAllDoctors)
+	s.dispatcher.AddMapping(DoctorFunctions_DOCTOR_CREATE.String(), s.createDoctor)
+	s.dispatcher.AddMapping(DoctorFunctions_DOCTOR_GET_BY_ID.String(), s.getDoctorById)
+	s.dispatcher.AddMapping(DoctorFunctions_DOCTOR_GET_ALL.String(), s.getAllDoctors)
 
-	s.dispatcher.AddMapping(careproto.ScheduleFunctions_SCHEDULE_GET_BY_OWNER_ID.String(), s.getScheduleByOwnerId)
-	s.dispatcher.AddMapping(careproto.ScheduleFunctions_SCHEDULE_CREATE.String(), s.createSchedule)
+	s.dispatcher.AddMapping(ScheduleFunctions_SCHEDULE_GET_BY_OWNER_ID.String(), s.getScheduleByOwnerId)
+	s.dispatcher.AddMapping(ScheduleFunctions_SCHEDULE_CREATE.String(), s.createSchedule)
 
-	s.dispatcher.AddMapping(careproto.SlotFunctions_SLOT_CREATE.String(), s.createSlot)
-	s.dispatcher.AddMapping(careproto.SlotFunctions_SLOT_UPDATE.String(), s.updateSlot)
+	s.dispatcher.AddMapping(SlotFunctions_SLOT_CREATE.String(), s.createSlot)
+	s.dispatcher.AddMapping(SlotFunctions_SLOT_UPDATE.String(), s.updateSlot)
 
 	return shim.Success(nil)
 }
@@ -115,7 +109,7 @@ func (s *ScheduleChaincode) getAllDoctors(stub shim.ChaincodeStubInterface, args
 		return shim.Error(err.Error())
 	}
 
-	doctorCollection := careproto.DoctorCollection{doctors}
+	doctorCollection := DoctorCollection{doctors}
 
 	return s.getResponseWithProto(&doctorCollection)
 }

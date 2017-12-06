@@ -1,26 +1,23 @@
-package impl
+package main
 
 import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/golang/protobuf/proto"
 	"encoding/json"
-
-	careproto "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol/proto"
-	careprotocol "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol"
 )
 
-type ScheduleServiceDefault struct {
+type ScheduleService struct {
 	logger *shim.ChaincodeLogger
 
-	scheduler careprotocol.Scheduler
+	scheduler Scheduler
 }
 
-func NewScheduleService(scheduler careprotocol.Scheduler) careprotocol.ScheduleService {
+func NewScheduleService(scheduler Scheduler) ScheduleService {
 	var logger = shim.NewLogger("schedule_service")
-	return &ScheduleServiceDefault{logger, scheduler}
+	return ScheduleService{logger, scheduler}
 }
 
-func (s *ScheduleServiceDefault) GetScheduleByOwnerId(stub shim.ChaincodeStubInterface, ownerId string) (*careproto.Schedule, error) {
+func (s *ScheduleService) GetScheduleByOwnerId(stub shim.ChaincodeStubInterface, ownerId string) (*Schedule, error) {
 	schedule, err := s.scheduler.GetByOwnerId(stub, ownerId)
 	if err != nil {
 		return nil, err
@@ -29,7 +26,7 @@ func (s *ScheduleServiceDefault) GetScheduleByOwnerId(stub shim.ChaincodeStubInt
 	return schedule, err
 }
 
-func (s *ScheduleServiceDefault) CreateSchedule(stub shim.ChaincodeStubInterface, schedule careproto.Schedule) (*careproto.Schedule, error) {
+func (s *ScheduleService) CreateSchedule(stub shim.ChaincodeStubInterface, schedule Schedule) (*Schedule, error) {
 	savedSchedule, err := s.scheduler.Save(stub, schedule)
 	if err != nil {
 		return nil, err
@@ -38,7 +35,7 @@ func (s *ScheduleServiceDefault) CreateSchedule(stub shim.ChaincodeStubInterface
 	return savedSchedule, nil
 }
 
-func (s *ScheduleServiceDefault) CreateSlot(stub shim.ChaincodeStubInterface, scheduleId string, slot careproto.Slot) (*careproto.Slot, error) {
+func (s *ScheduleService) CreateSlot(stub shim.ChaincodeStubInterface, scheduleId string, slot Slot) (*Slot, error) {
 	var err error
 
 	schedule, err := s.scheduler.GetByOwnerId(stub, scheduleId)
@@ -67,7 +64,7 @@ func (s *ScheduleServiceDefault) CreateSlot(stub shim.ChaincodeStubInterface, sc
 	return &slot, nil
 }
 
-func (s *ScheduleServiceDefault) UpdateSlot(stub shim.ChaincodeStubInterface, scheduleId string, slotId string, newSlot careproto.Slot) error {
+func (s *ScheduleService) UpdateSlot(stub shim.ChaincodeStubInterface, scheduleId string, slotId string, newSlot Slot) error {
 	var err error
 
 	schedule, err := s.scheduler.GetByOwnerId(stub, scheduleId)
@@ -87,7 +84,7 @@ func (s *ScheduleServiceDefault) UpdateSlot(stub shim.ChaincodeStubInterface, sc
 			}
 
 			if newSlot.RegistrationInfo != nil && newSlot.RegistrationInfo.AttendeeId != "" {
-				newSlot.Avaliable = careproto.Slot_BUSY
+				newSlot.Avaliable = Slot_BUSY
 			} else {
 				existedSlot.Avaliable = newSlot.Avaliable
 			}
@@ -111,10 +108,10 @@ func (s *ScheduleServiceDefault) UpdateSlot(stub shim.ChaincodeStubInterface, sc
 	return nil
 }
 
-func (s *ScheduleServiceDefault) DecodeScheduleByteString(scheduleByteString string) (*careproto.Schedule, error) {
+func (s *ScheduleService) DecodeScheduleByteString(scheduleByteString string) (*Schedule, error) {
 	var err error
 
-	schedule := careproto.Schedule{}
+	schedule := Schedule{}
 	err = proto.Unmarshal([]byte(scheduleByteString), &schedule)
 	if err != nil {
 		s.logger.Errorf("Error while unmarshalling Schedule: %v", err.Error())
@@ -123,10 +120,10 @@ func (s *ScheduleServiceDefault) DecodeScheduleByteString(scheduleByteString str
 	return &schedule, err
 }
 
-func (s *ScheduleServiceDefault) DecodeSlotByteString(scheduleByteString string) (*careproto.Slot, error) {
+func (s *ScheduleService) DecodeSlotByteString(scheduleByteString string) (*Slot, error) {
 	var err error
 
-	slot := careproto.Slot{}
+	slot := Slot{}
 	err = proto.UnmarshalText(scheduleByteString, &slot)
 	if err != nil {
 		s.logger.Errorf("Error while unmarshalling Slot: %v", err.Error())

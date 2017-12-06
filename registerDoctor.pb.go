@@ -15,7 +15,7 @@ It has these top-level messages:
 	Slot
 	RegistrationInfo
 */
-package proto
+package main
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"

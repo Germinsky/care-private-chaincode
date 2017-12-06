@@ -1,4 +1,4 @@
-package impl
+package main
 
 import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -8,19 +8,18 @@ import (
 	"encoding/json"
 
 	careproto "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol/proto"
-	careprotocol "bitbucket.org/ntarasenko/solvecare-chaincode/schedule/protocol"
 )
 
-type DoctorServiceDefault struct {
+type DoctorService struct {
 	logger *shim.ChaincodeLogger
 }
 
-func NewDoctorService() careprotocol.DoctorService {
+func NewDoctorService() DoctorService {
 	var logger = shim.NewLogger("doctor_service")
-	return &DoctorServiceDefault{logger}
+	return DoctorService{logger}
 }
 
-func (s *DoctorServiceDefault) GetAllDoctors(stub shim.ChaincodeStubInterface) ([]*careproto.Doctor, error) {
+func (s *DoctorService) GetAllDoctors(stub shim.ChaincodeStubInterface) ([]*Doctor, error) {
 	query := `{
 		"selector":{
 			"DoctorId":{"$regex":""}
@@ -36,7 +35,7 @@ func (s *DoctorServiceDefault) GetAllDoctors(stub shim.ChaincodeStubInterface) (
 
 	s.logger.Infof("resultsIterator: %v", resultsIterator)
 
-	doctors := make([]*careproto.Doctor, 0)
+	doctors := make([]*Doctor, 0)
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		s.logger.Infof("queryResponse: %v", queryResponse)
@@ -44,7 +43,7 @@ func (s *DoctorServiceDefault) GetAllDoctors(stub shim.ChaincodeStubInterface) (
 			return nil, err
 		}
 
-		var doctor careproto.Doctor
+		var doctor Doctor
 		json.Unmarshal(queryResponse.Value, &doctor)
 		s.logger.Infof("doctor: %v", doctor)
 		doctors = append(doctors, &doctor)
@@ -53,7 +52,7 @@ func (s *DoctorServiceDefault) GetAllDoctors(stub shim.ChaincodeStubInterface) (
 	return doctors, nil
 }
 
-func (s *DoctorServiceDefault) GetDoctorById(stub shim.ChaincodeStubInterface, doctorId string) (*careproto.Doctor, error) {
+func (s *DoctorService) GetDoctorById(stub shim.ChaincodeStubInterface, doctorId string) (*Doctor, error) {
 	doctorKey := "doctor:" + doctorId
 	doctorBytes, err := stub.GetState(doctorKey)
 	if err != nil {
@@ -67,12 +66,12 @@ func (s *DoctorServiceDefault) GetDoctorById(stub shim.ChaincodeStubInterface, d
 
 	s.logger.Infof("Getting doctor %v", string(doctorBytes))
 
-	var doctor careproto.Doctor
+	var doctor Doctor
 	json.Unmarshal(doctorBytes, &doctor)
 	return &doctor, nil
 }
 
-func (s *DoctorServiceDefault) SaveDoctor(stub shim.ChaincodeStubInterface, doctor careproto.Doctor) (*careproto.Doctor, error) {
+func (s *DoctorService) SaveDoctor(stub shim.ChaincodeStubInterface, doctor Doctor) (*Doctor, error) {
 	fmt.Printf("Saving doctor %v \n", doctor)
 
 	doctorBytes, err := json.Marshal(&doctor)
@@ -87,10 +86,10 @@ func (s *DoctorServiceDefault) SaveDoctor(stub shim.ChaincodeStubInterface, doct
 	return &doctor, nil
 }
 
-func (s *DoctorServiceDefault) DecodeProtoByteString(encodedDoctorByteString string) (*careproto.Doctor, error) {
+func (s *DoctorService) DecodeProtoByteString(encodedDoctorByteString string) (*Doctor, error) {
 	var err error
 
-	doctor := careproto.Doctor{}
+	doctor := Doctor{}
 	err = proto.Unmarshal([]byte(encodedDoctorByteString), &doctor)
 	if err != nil {
 		s.logger.Errorf("Error while unmarshalling Doctor: %v", err.Error())
